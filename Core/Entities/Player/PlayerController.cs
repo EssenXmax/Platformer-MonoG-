@@ -13,6 +13,7 @@ namespace Platformer_MonoG.Core.Entities.Player
 
         private readonly Player _player;
         private KeyboardState _previousKeyboardState;
+        private MouseState _previousMouseState;
 
         public PlayerController(Player player)
         {
@@ -30,20 +31,29 @@ namespace Platformer_MonoG.Core.Entities.Player
         {
 
             var keyboardState = Keyboard.GetState();
-            if (keyboardState.IsKeyDown(Keys.D))
+            
+
+            if (keyboardState.IsKeyDown(Keys.D) && _player.CanWalk)
             {
                 _player.Move(true);
             }
-            else if (keyboardState.IsKeyDown(Keys.A))
+            else if (keyboardState.IsKeyDown(Keys.A) && _player.CanWalk)
             {
                 _player.Move(false);
             }
-            else if (_player.Velocity.Length() > 0.001f)
+            else if (!_player.Velocity.X.IsRoughlyZero())
             {
                 _player.Halt();
             }
 
+            var mouseState = Mouse.GetState();
+            if(mouseState.LeftButton == ButtonState.Pressed && _previousMouseState.LeftButton == ButtonState.Pressed)
+            {
+                _player.Attack();
+            }
+
             _previousKeyboardState = keyboardState;
+            _previousMouseState = mouseState;
 
         }
     }

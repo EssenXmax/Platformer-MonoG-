@@ -13,24 +13,17 @@ using Vector2 = Microsoft.Xna.Framework.Vector2;
 namespace Platformer_MonoG.Graphics
 {
 
-    public enum AnimationState
+    public class SpriteAnimation : IUpdateable, IAnimation
     {
-        Stopped,
-        Paused,
-        Playing
-    }
-
-
-    public class SpriteAnimation: IUpdateable, IAnimation
-    {
-        private const double DEFAULT_FPS = 8;
+        private const double DEFAULT_FPS = 10;
 
 
 
         public int SpriteCount { get; set; }
+        public Vector2 SpriteOrigin { get; set; }
         public int SpriteWidth { get; set; }
         public int SpriteHeight { get; set; }
-        public int CurrentOffset => (int)(PlaybackTime / ( 1 / Fps));
+        public int CurrentOffset => (int)(PlaybackTime / (1 / Fps));
 
         public double Fps { get; set; } = DEFAULT_FPS;
         public double TotalDuration => SpriteCount * (1 / Fps);
@@ -39,8 +32,10 @@ namespace Platformer_MonoG.Graphics
 
 
         public Texture2D Texture { get; set; }
-        private SpriteEffects _spriteEffect;
+
         public AnimationState State { get; set; } = AnimationState.Stopped;
+
+        public event EventHandler<AnimationCompletedEventArgs> AnimationCompleted;
 
 
 
@@ -51,28 +46,30 @@ namespace Platformer_MonoG.Graphics
             SpriteWidth = spriteWidth;
             SpriteHeight = spriteHeight;
             Texture = texture ?? throw new ArgumentNullException(nameof(texture));
+            SpriteOrigin = new Vector2(spriteWidth / 2f, spriteHeight / 2f);
         }
 
         public void Update(GameTime gameTime)
         {
 
-            if(State == AnimationState.Playing)
+            if (State == AnimationState.Playing)
             {
                 PlaybackTime += gameTime.ElapsedGameTime.TotalSeconds;
 
                 if (PlaybackTime > TotalDuration)
                 {
                     PlaybackTime = 0;
+                    OnAnimationCompleted();
                 }
             }
 
         }
 
-        public void Draw(SpriteBatch spriteBatch, Vector2 position)
+        public void Draw(SpriteBatch spriteBatch, Vector2 position, SpriteEffects spriteEffects)
         {
             var drawRect = new Rectangle(CurrentOffset * SpriteWidth, 0, SpriteWidth, SpriteHeight);
             //spriteBatch.Draw(Texture,position, sourceRectangle: drawRect, color:Color.White,0,Vector2.Zero,1, effects:_spriteEffect,0 );
-            spriteBatch.Draw(Texture, new Rectangle(position.ToPoint(), new Point(SpriteWidth, SpriteHeight)), drawRect, Color.White, 0, Vector2.Zero, _spriteEffect, 0);
+            spriteBatch.Draw(Texture, new Rectangle(position.ToPoint(), new Point(SpriteWidth, SpriteHeight)), drawRect, Color.White, 0, SpriteOrigin, spriteEffects, 0);
         }
 
         public void Play()
@@ -84,6 +81,7 @@ namespace Platformer_MonoG.Graphics
         {
             State = AnimationState.Stopped;
             PlaybackTime = 0;
+            
         }
 
         public void Pause()
@@ -91,20 +89,11 @@ namespace Platformer_MonoG.Graphics
             State = AnimationState.Paused;
         }
 
-        public void Flip()
+        protected virtual void OnAnimationCompleted()
         {
-            if(_spriteEffect == SpriteEffects.FlipHorizontally)
-            {
-                
-                _spriteEffect = SpriteEffects.None;
-
-            }
-            else
-            {
-
-                _spriteEffect = SpriteEffects.FlipHorizontally;
-
-            }
+            var handler = AnimationCompleted;
+            handler?.Invoke(this, new AnimationCompletedEventArgs());
         }
     }
 }
+

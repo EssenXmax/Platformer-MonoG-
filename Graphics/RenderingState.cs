@@ -15,9 +15,9 @@ namespace Platformer_MonoG.Graphics
             Animation = animation;
         }
 
-        public void Draw(SpriteBatch spriteBatch, Vector2 position)
+        public void Draw(SpriteBatch spriteBatch, Vector2 position, SpriteEffects spriteEffects)
         {
-            Animation?.Draw(spriteBatch, position);
+            Animation?.Draw(spriteBatch, position, spriteEffects);
         }
     }
 }

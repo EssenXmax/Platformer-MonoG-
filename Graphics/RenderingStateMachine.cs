@@ -67,11 +67,10 @@ namespace Platformer_MonoG.Graphics
 
         }
 
-        public void Draw(SpriteBatch spriteBatch, Vector2 position)
+        public void Draw(SpriteBatch spriteBatch, Vector2 position, SpriteEffects spriteEffects)
         {
-            CurrentState?.Animation?.Draw(spriteBatch, position);
+            CurrentState?.Animation?.Draw(spriteBatch, position, spriteEffects);
         }
-
 
         public void Update(GameTime gameTime)
         {
