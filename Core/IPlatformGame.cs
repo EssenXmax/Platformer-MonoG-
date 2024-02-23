@@ -5,12 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Platformer_MonoG.Physics
+namespace Platformer_MonoG.Core
 {
-    public interface ITransformable
+    public interface IPlatformGame
     {
 
-        Vector2 Position { get; set; }
+        GameServiceContainer Services { get; }
 
     }
 }

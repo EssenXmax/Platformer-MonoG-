@@ -46,7 +46,13 @@ namespace Platformer_MonoG.Core.Entities.Player
                 _player.Halt();
             }
 
-            var mouseState = Mouse.GetState();
+            if (!_previousKeyboardState.IsKeyDown(Keys.Space) && keyboardState.IsKeyDown(Keys.Space))
+            {
+                _player.Jump();
+            }
+
+
+                var mouseState = Mouse.GetState();
             if(mouseState.LeftButton == ButtonState.Pressed && _previousMouseState.LeftButton == ButtonState.Pressed)
             {
                 _player.Attack();

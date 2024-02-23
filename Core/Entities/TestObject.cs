@@ -11,5 +11,6 @@ namespace Platformer_MonoG.Core.Entities
     public class TestObject : ITransformable
     {
         public Vector2 Position { get; set; }
+
     }
 }

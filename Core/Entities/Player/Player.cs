@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Platformer_MonoG.Audio;
 using Platformer_MonoG.Graphics;
+using Platformer_MonoG.Physics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,8 +13,11 @@ using System.Threading.Tasks;
 namespace Platformer_MonoG.Core.Entities.Player
 {
 
-    public class Player : IGameEntity
+    public class Player : IGameEntity, ITransformable
     {
+        private const float PLAYER_MASS = 80;
+
+
         private const int IDLE_ANIM_SPRITE_COUNT = 4;
         private const int WALK_OR_ATTACK_ANIM_SPRITE_COUNT = 6;
         private const int ANIM_SPRITE_SIZE = 48;
@@ -25,12 +29,13 @@ namespace Platformer_MonoG.Core.Entities.Player
         private readonly RenderingStateMachine _renderStateMachine = new RenderingStateMachine();
         private SoundPool _attackSoundPool;
         private CoolDown _attackCoolDown = new CoolDown(1);
-
+        
+        public Collider Collider { get; private set; }
 
 
         public int DrawOrder { get; set; }
         public int UpdateOrder { get; set; }
-        public float Speed { get; set; } = 50;
+        public float Speed { get; set; } = 200f;
         public bool isFacingRight { get; set; } = true;
         public bool CanWalk
         {
@@ -42,10 +47,9 @@ namespace Platformer_MonoG.Core.Entities.Player
 
 
         public Vector2 Position { get; set; }
-        public Vector2 _velocity;
-        public Vector2 Velocity => _velocity; 
+        public Vector2 Velocity => Collider.Velocity; 
 
-        public Player(PlayerTextureContainer textureContainer, SoundPool attackSounds)
+        public Player(IPlatformGame game,PlayerTextureContainer textureContainer, SoundPool attackSounds)
         {
             _attackSoundPool = attackSounds;
 
@@ -73,6 +77,15 @@ namespace Platformer_MonoG.Core.Entities.Player
             _renderStateMachine.SetState(nameof(PlayerTextureContainer.Idle));
 
             _renderStateMachine.CurrentState.Animation?.Play();
+
+
+
+
+
+            Collider = game.Services.GetService<IPhysicsManager>().CreateCollider(this,PLAYER_MASS,new Vector2(20,48), true);
+
+
+
         }
 
         private void AttackAnim_AnimationCompleted(object sender, AnimationCompletedEventArgs e)
@@ -92,19 +105,22 @@ namespace Platformer_MonoG.Core.Entities.Player
         public void Update(GameTime gameTime)
         {
 
-            if(_velocity.Length() > MathUtil.EPSILON)
+            if(Collider.Velocity.Length() > MathUtil.EPSILON)
             {
-                Position += _velocity * (float)gameTime.ElapsedGameTime.TotalSeconds;
+
             }
 
             _renderStateMachine.Update(gameTime);
             _attackCoolDown.Update(gameTime);
 
+
+            Position = Collider.Position;
+
         }
 
         public void Halt()
         {
-            _velocity = Vector2.Zero;
+            Collider.Velocity = new Vector2(0, Collider.Velocity.Y);
 
             
 
@@ -122,8 +138,10 @@ namespace Platformer_MonoG.Core.Entities.Player
             _renderStateMachine.SetState(nameof(PlayerTextureContainer.Walk));
             _renderStateMachine.CurrentState.Animation.Play();
 
-            _velocity = new Vector2(1, 0) * Speed * direction;
+            Collider.Velocity = new Vector2(Speed * direction, Velocity.Y);
 
+
+            //Collider.ApplyImpulse(new Vector2(direction * 1000, 0));
         }
 
         public bool Attack()
@@ -138,7 +156,7 @@ namespace Platformer_MonoG.Core.Entities.Player
 
             _attackSoundPool.PlayRandom();
 
-            _velocity = Vector2.Zero;
+            Collider.Velocity = new Vector2(0, Collider.Velocity.Y);
 
             _renderStateMachine.SetState(nameof(PlayerTextureContainer.Attack1));
             _renderStateMachine.CurrentState.Animation.Play();
@@ -147,5 +165,15 @@ namespace Platformer_MonoG.Core.Entities.Player
 
 
         }
+
+
+        public bool Jump()
+        {
+            Collider.ApplyImpulse(Vector2.UnitY * -200000f);
+
+            return true;
+        }
+
+
     }
 }

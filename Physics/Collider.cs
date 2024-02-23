@@ -17,6 +17,16 @@ namespace Platformer_MonoG.Physics
         private readonly Body _body;
         private Shape _shape;
         public Vector2 Size{ get; }
+        public Vector2 Velocity
+        {
+            get
+            {
+                var velo = Body.GetLinearVelocity();
+                return new Vector2(velo.X, velo.Y);
+            }
+
+            set => Body.SetLinearVelocity(new Box2DX.Common.Vec2(value.X, value.Y));
+        }
         public Vector2 Position
         {
             get
@@ -25,13 +35,16 @@ namespace Platformer_MonoG.Physics
             }
 
         }
-        public Rectangle BoundingBox => new Rectangle(MathUtil.RoundToInt(Position.X), MathUtil.RoundToInt(Position.Y), MathUtil.RoundToInt(Size.X), MathUtil.RoundToInt(Size.Y));
+        public Rectangle BoundingBox => new Rectangle(MathUtil.RoundToInt(Position.X - Size.X / 2f), MathUtil.RoundToInt(Position.Y - Size.Y / 2f), MathUtil.RoundToInt(Size.X), MathUtil.RoundToInt(Size.Y));
+        public ITransformable Transformable { get; private set; }
+        public Body Body => _body;
 
-        public Collider(Body body, Shape shape, Vector2 size)
+        public Collider(ITransformable transformable,Body body, Shape shape, Vector2 size)
         {
             _body = body;
             _shape = shape;
             Size = size;
+            Transformable = transformable;
         }
 
 
@@ -39,6 +52,26 @@ namespace Platformer_MonoG.Physics
         {
             
             spriteBatch.Draw(texture, BoundingBox, color);
+        }
+
+        public void Update(GameTime gameTime)
+        {
+            //if(Transformable != null)
+            //{
+            //    Transformable.Position = Position;
+
+            //}
+        }
+
+        public void ApplyForce(Vector2 force)
+        {
+            Point center = (Size * 0.5f).ToPoint();
+            _body.ApplyForce(new Box2DX.Common.Vec2(force.X, force.Y), new Box2DX.Common.Vec2(center.X, center.Y));
+        }
+
+        public void ApplyImpulse(Vector2 impulse)
+        {
+            _body.ApplyImpulse(new Box2DX.Common.Vec2(impulse.X, impulse.Y),new Box2DX.Common.Vec2(Position.X, Position.Y));
         }
     }
 }
